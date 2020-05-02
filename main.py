@@ -4,6 +4,7 @@ from selenium import webdriver
 from crawlers.mcmusic_crawler import MCMusicCrawler
 from crawlers.flymusic_crawler import FlyMusicCrawler
 from models.search_item import SearchItem
+from data_processing import process_data
 
 def pack(path):
     name = path.split(os.path.sep)[-1]
@@ -56,6 +57,8 @@ def crawl_flymusic():
 if __name__ == '__main__':
     # crawl_mcmusic()
     # crawl_flymusic()
-    pack('out/mc')
-    pack('out/fly')
+    # pack('out/mc')
+    # pack('out/fly')
+
+    process_data('out/merged/', 'mc.csv', 'fly.csv')
 
