@@ -22,6 +22,14 @@ def _get_merged_df(mdf, fdf, wdf, website_list):
 
     return pd.concat([mdf, fdf])
 
+def _get_type_df(df):
+    names = list(set(list(df['type'])))
+    ids = [uuid.uuid4() for i in names]
+    data = {'id': ids, 'name': names}
+    tdf = pd.DataFrame(data)
+
+    return tdf
+
 def process_data(folder, mc_file, fly_file):
     website_list = ["McMusic", "FlyMusic"]
 
@@ -34,6 +42,23 @@ def process_data(folder, mc_file, fly_file):
     fdf = pd.read_csv(os.path.join(folder, fly_file))
 
     df = _get_merged_df(mdf, fdf, wdf, website_list)
+    tdf = _get_type_df(df)
+
+    ## Create type mapping
+    type_ids = []
+    for index, row in df.iterrows():
+        type_ids.append(_get_id_by_name(tdf, row["type"]))
+
+    df = df.drop(columns=["type"])
+    df["type_id"] = type_ids
+
+    for index, row in df.iterrows():
+        numbers = []
+        for i in row["price"]:
+            if i.isdigit():
+                numbers.append(i)
+
+        row["price"]=int("".join(numbers))/100
 
     ## Get company name
     companies = [row['name'].split(' ')[0].lower().capitalize() for index, row in df.iterrows()]
@@ -48,9 +73,10 @@ def process_data(folder, mc_file, fly_file):
         companyIds.append(_get_id_by_name(cdf, companies[index]))
     
     df.insert(0, "id", [uuid.uuid4() for i in df.iterrows()], False)
-    df.insert(1, "companyId", companyIds, True)
+    df.insert(1, "company_id", companyIds, True)
 
     ## Save both DataFrames
     wdf.to_csv(os.path.join(out_path, 'websites.csv'), index=False)
     cdf.to_csv(os.path.join(out_path, 'companies.csv'), index=False)
     df.to_csv(os.path.join(out_path, 'instruments.csv'), index=False)
+    tdf.to_csv(os.path.join(out_path, 'types.csv'), index=False)
